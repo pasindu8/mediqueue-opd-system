@@ -1,18 +1,18 @@
-# IT23623286 - H H V J Karunarathna
-## Component 1: Search & Hospital Filtering
+# IT23749252 - P R G K R S Bandara
+## Component 2: NIC/PHN Verification & Security
 
 ---
 
 ### 1. Component Overview & Workload Description
-- **Student ID:** IT23623286
-- **Student Name:** H H V J Karunarathna
-- **Component Title:** Component 1 – Search & Hospital Filtering
+- **Student ID:** IT23749252
+- **Student Name:** P R G K R S Bandara
+- **Component Title:** Component 2 – NIC/PHN Verification & Security
 - **Course:** IT3060 – Human Computer Interaction (HCI)
 - **Project Title:** MediQueue – Appointment Booking and Queue Management for Government Hospital OPDs
 - **Group Number:** WE_170
 - **Group Name:** MediQueue Innovators
 
-Component 1 focuses on eliminating patient uncertainty before travelling to government hospitals. Patients and caregivers often commute long distances without knowing whether a specific hospital OPD, clinic type, or specialized service is operational. Component 1 provides real-time search, multi-criteria filtering (by district, clinic category, doctor specialty, and availability), hospital information display, and multi-language accessibility (Sinhala, Tamil, English).
+Component 2 provides secure, accessible digital identity management for the public hospital system. In government OPDs, patient record duplication, identity fraud, and proxy management difficulties represent major administrative bottlenecks. Component 2 implements secure National Identity Card (NIC) verification, Personal Health Number (PHN) lookup, SMS OTP 2-factor authentication, dependent family profile management, and role-based access control for hospital staff.
 
 ---
 
@@ -20,75 +20,77 @@ Component 1 focuses on eliminating patient uncertainty before travelling to gove
 
 | Requirement ID | Type | Requirement Description | Traceable Research Evidence |
 | :--- | :--- | :--- | :--- |
-| **FR-02** | Functional | **Hospital Search:** The system shall allow users to search for available government hospitals across Sri Lanka. | Patient Questionnaire – Hospital/OPD access and selection |
-| **FR-03** | Functional | **OPD Search and Filtering:** Users shall be able to filter hospitals and OPDs by relevant criteria such as location, district, clinic type, and available services. | Component 1 – Search & Filtering research (Finding 01 & 02) |
-| **FR-19** | Functional | **Hospital and Clinic Information:** Users shall be able to view relevant hospital, OPD, clinic, doctor rosters, and service information before booking. | Patient search and filtering needs |
-| **FR-23** | Functional | **Multi-Language Support:** The system shall support relevant national languages (Sinhala, Tamil, and English) across the application. | Accessibility for diverse literacy levels |
-| **NFR-13** | Non-Functional | **Multilingual Accessibility:** Supported languages must be presented consistently throughout key user search flows. | Inclusive design for non-English speakers |
-| **NFR-01** | Non-Functional | **Usability & Learnability:** The search interface must be simple, clean, and intuitive with clear filter tags. | Usability considerations for elderly patients |
+| **FR-01** | Functional | **User Registration and Login:** The system shall allow users to create an account and securely log in. | Patient and caregiver need for personalized appointment management |
+| **FR-06** | Functional | **Identity Verification:** The system shall support secure patient verification using an appropriate identifier such as NIC/PHN and OTP. | Component 2 – Verification research & privacy concerns (Finding 04) |
+| **FR-11** | Functional | **Proxy Booking:** The system shall allow an authorized caregiver to book and manage appointments on behalf of a family member. | Caregiver Questionnaire – Proxy Booking (Finding 03) |
+| **FR-12** | Functional | **Multiple Family Profiles:** Caregivers shall be able to manage appointment profiles for multiple family members under one account. | Caregiver Questionnaire – family profile requirement |
+| **NFR-06** | Non-Functional | **Security & Authentication:** User accounts and patient records must be protected via encrypted tokens (JWT) and secure data handling. | Patient concerns about medical data privacy |
+| **NFR-07** | Non-Functional | **Privacy & Role-Based Access:** Medical and personal health data must only be accessible to authorized users and medical personnel. | Ethical considerations & clinical privacy standards |
 
 ---
 
-### 3. Dedicated FULL CRUD Operation (Component 1)
+### 3. Dedicated FULL CRUD Operation (Component 2)
 
-**Target Entity:** Government Hospital Directory & OPD Units (`Hospital` Model)
+**Target Entity:** Patient Identity Profile, PHN & Health Demographics (`PatientDetails` Model)
 
 | Operation | Action Description | Backend API Endpoint | HTTP Method | UI Screen / User Trigger |
 | :--- | :--- | :--- | :--- | :--- |
-| **Create (C)** | Register new government hospital into national directory with district, category, and assigned IT lead | `/hospital/addHospital` | `POST` | `src/app/admin/super-admin.js` -> "+ Add Hospital" Modal |
-| **Read (R)** | Search & filter hospitals by district/name and fetch hospital details and OPD clinics | `/hospital/all` & `/hospital/details` | `POST` | `src/app/appointments/doctor.js` & `NewToken.js` & `super-admin.js` |
-| **Update (U)** | Update hospital details, district jurisdiction, OPD units, or assigned IT administrative leads | `/hospital/update` | `POST` | `src/app/admin/super-admin.js` -> Edit Hospital Modal |
-| **Delete (D)** | De-register or remove a hospital entry from the national OPD directory | `/hospital/delete` | `POST` | `src/app/admin/super-admin.js` -> Delete Hospital Button |
+| **Create (C)** | Register new patient medical identity with PHN, DOB, blood group, allergies, and emergency contact | `/patient/create` | `POST` | `src/app/profile/AddAccountDetails.js` & `PersonalDetails.js` |
+| **Read (R)** | Retrieve authenticated patient profile, PHN credentials, and emergency contact details | `/patient/details` | `POST` | `src/app/(tabs)/profile.js` & `src/app/profile/accountDetails.js` |
+| **Update (U)** | Update patient address, phone, emergency contacts, known allergies, and medical history | `/patient/update` | `POST` | `src/app/profile/EditAccountDetails.js` -> Save Changes Button |
+| **Delete (D)** | Remove patient demographic profile / de-register account records | `/patient/delete` | `POST` | `src/app/(tabs)/profile.js` & `accountDetails.js` -> Remove Profile |
 
 ---
 
 ### 4. Assigned App Screens & UI Components
 
-1. **`src/app/appointments/doctor.js` (Doctor Specialty Search & Filtering)**:
-   - Search bar with instant real-time debounced query filtering.
-   - Filter chips for medical specialties (Cardiology, Dermatology, General Medicine, Pediatrics, Dental).
-   - Doctor profile cards displaying room numbers, clinic affiliations, and availability badges.
-2. **`src/app/appointments/NewToken.js` (Hospital & OPD Clinic Selector)**:
-   - District selection picker and hospital facility dropdown.
-   - Clinic unit selector displaying operational status and active queue counts.
-   - Date and time-slot selection for OPD consultation.
-3. **`src/app/admin/super-admin.js` (National Hospital Grid & Directory Management)**:
-   - Complete administrative CRUD management for hospitals, OPD clinics, and district officers.
-   - District distribution metrics and real-time hospital search.
-4. **`src/app/admin/it-support.js` (Hospital IT Infrastructure Roster)**:
-   - Doctors, clinics, pharmacies, and lab stations configuration.
-5. **`src/locales/` (`en.json`, `si.json`, `ta.json`) & `src/i18n.js`**:
-   - Trilingual localization engine supporting instant English, Sinhala (සිංහල), and Tamil (தமிழ்) UI translation.
+1. **`src/app/LoginNIC.js` (NIC Authentication Screen)**:
+   - National Identity Card (Old 9-digit + V/X and New 12-digit) input validation.
+   - Trilingual language selection toggle (English, Sinhala, Tamil).
+2. **`src/app/LoginPhone.js` & `src/app/opt.js` (SMS OTP Verification)**:
+   - Mobile phone number submission with auto-prefix (+94).
+   - 6-digit numeric OTP entry with countdown resend timer and error handling.
+3. **`src/app/Register.js` (Patient Account Creation)**:
+   - Account setup with name, phone, email, and password hashing.
+4. **`src/app/PersonalDetails.js` & `src/app/MedicalDetails.js` (Initial Health Profile Setup)**:
+   - Step-by-step onboarding capturing age, gender, address, blood group, and known drug allergies.
+5. **`src/app/AdminLogin.js` (Hospital Staff Secure Login)**:
+   - Role-based portal authentication for Doctors, Pharmacists, Lab Technicians, IT Support, and Super Admins.
+6. **`src/app/(tabs)/profile.js` (Profile Overview & Language Settings)**:
+   - Displays user details, active PHN, app language switcher, and secure session logout.
+7. **`src/app/profile/accountDetails.js`, `AddAccountDetails.js`, `EditAccountDetails.js`**:
+   - Complete interactive profile management supporting Create, Read, Update, and Delete.
 
 ---
 
 ### 5. Assigned Backend Files
 
 - **Controllers**:
-  - `backend/controllers/hospitalController.js` - Hospital search, district filtering, creation, update, and deletion.
-  - `backend/controllers/clinicController.js` - OPD clinic scheduling, room allocations, and clinic queries.
-  - `backend/controllers/doctorController.js` - Doctor directory, specialties, and hospital affiliations.
+  - `backend/controllers/authController.js` - User registration, NIC login, OTP generation, and token signing.
+  - `backend/controllers/patientController.js` - Patient medical demographics, PHN generation, profile updates, and deletion.
+  - `backend/controllers/adminController.js` - Hospital staff role authentication and administrative token issuance.
 - **Routes**:
-  - `backend/routes/hospitalRoutes.js`
-  - `backend/routes/clinicRoutes.js`
-  - `backend/routes/doctorRoutes.js`
+  - `backend/routes/authRoutes.js`
+  - `backend/routes/patientRoutes.js`
+  - `backend/routes/adminRoutes.js`
 - **Models**:
-  - `backend/models/Hospital.js` - Mongoose Hospital Schema (`name`, `district`, `category`, `clinics`, `assignedITLead`).
-  - `backend/models/Clinic.js` - Mongoose Clinic Schema (`name`, `roomNumber`, `hospitalId`, `service`).
-  - `backend/models/Doctor.js` - Mongoose Doctor Schema (`name`, `specialty`, `hospitalId`, `clinicId`).
+  - `backend/models/User.js` - Authentication credentials schema (`name`, `phoneNumber`, `NIC`, `password`).
+  - `backend/models/PatientDetails.js` - Demographic & medical history schema (`userId`, `patientId`, `dateOfBirth`, `bloodGroup`, `knownAllergies`, `emergencyContact`).
+  - `backend/models/Admin.js` - Staff role schema (`StaffID`, `email`, `role`, `hospitalId`).
+- **Middlewares**:
+  - `backend/middleware/authMiddleware.js` - JWT bearer token verification and route protection.
 
 ---
 
 ### 6. Assigned Frontend Services & Utilities
 
-- `src/services/hospitalService.js` - API communication for `allHospitals`, `getHospitalDetails`, `createHospital`, `updateHospital`, `deleteHospital`.
-- `src/services/doctorService.js` - API communication for `getAllDoctors`, `getDoctorsBySpecialty`.
-- `src/i18n.js` - Translation provider with `react-i18next`.
+- `src/services/authService.js` - API communication for `loginNIC`, `loginPhone`, `verifyOTP`, `registerUser`.
+- `src/services/profileService.js` - API communication for `getPatientDetails`, `addPatientDetails`, `EditPatientDetails`, `deletePatientProfile`.
 
 ---
 
 ### 7. HCI Design & Usability Principles Implemented
 
-- **Recognition Rather Than Recall (Nielsen Heuristic #6)**: Visual district tags and specialty badges allow patients to recognize available clinics without typing complex medical terms.
-- **Accessibility & Multilingual Inclusion (NFR-13)**: Trilingual toggling ensures patients from rural or non-English speaking backgrounds can independently navigate hospital services.
-- **Error Prevention (Nielsen Heuristic #5)**: Dynamic dropdowns and validated search filters prevent users from searching for non-existent clinic sessions.
+- **Error Prevention & Format Feedback (Nielsen Heuristic #5)**: Real-time validation for Sri Lankan NIC numbers (9 numbers + V/X or 12 numeric digits) prevents incorrect registration.
+- **User Control and Freedom (Nielsen Heuristic #3)**: Patients can review, edit, or delete their profile information at any time without hospital counter assistance.
+- **Aesthetic and Minimalist Design (Nielsen Heuristic #8)**: Medical information is grouped logically into accordion tabs (Demographics, Emergency Contacts, Allergies) to avoid cognitive overload.
