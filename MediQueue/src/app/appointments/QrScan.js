@@ -120,7 +120,13 @@ export default function ScanQRScreen() {
                 targetPatientId,
                 hospitalId,
                 appointmentDate,
-                appointmentTime
+                appointmentTime,
+                {
+                  clinicName,
+                  roomNumber,
+                  doctorName,
+                  isWalkIn: true,
+                }
               );
 
               if (result.ok || result.status === 201 || result.data?.success) {

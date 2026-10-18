@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Platform,
   RefreshControl,
@@ -504,9 +505,25 @@ export default function DoctorScreen() {
             </View>
 
             <View style={styles.qrPlaceholderBox}>
-              <Ionicons name="qr-code" size={130} color="#2E7D52" />
-              <Text style={styles.qrInstructionText}>
-                Align Patient Health QR or Digital PHN within frame to load records.
+              <Image
+                source={{
+                  uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                    JSON.stringify({
+                      type: 'MEDIQUEUE_DESK',
+                      hospitalId: roomInfo.hospitalId || '6abe1095389a5f3809a9da0a',
+                      clinicId: roomInfo.clinicId || '6ac0ac6d9d8d70c4b8d6fd99',
+                      doctorId: '6ad482e96ec85cac883d4afa',
+                      doctorName: 'Dr. Samantha Wickramasinghe',
+                      roomNumber: roomInfo.room || 'Room 01',
+                      clinicName: roomInfo.clinic || 'General OPD',
+                    })
+                  )}`
+                }}
+                style={{ width: 180, height: 180, borderRadius: 12, backgroundColor: '#FFFFFF' }}
+                resizeMode="contain"
+              />
+              <Text style={[styles.qrInstructionText, { marginTop: 12 }]}>
+                {roomInfo.room || 'Room 01'} Official Desk QR Code.{'\n'}Patients scan this code with the MediQueue app to connect.
               </Text>
             </View>
 

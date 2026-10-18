@@ -52,13 +52,15 @@ export default function DashboardScreen() {
             
             const appointmentResult = await getPatientAppointmentDetails(storedUserId.trim());
             
-            if (appointmentResult.ok && appointmentResult.data) {
+            if (appointmentResult.ok && appointmentResult.data && appointmentResult.data.appointment) {
               setActiveToken(appointmentResult.data.appointment);
 
-              const hospitalResult = await getHospitalDetails(appointmentResult.data.appointment.hospitalId.trim());
-              
-              if (hospitalResult.ok && hospitalResult.data) {
-                setHospitalDetails(hospitalResult.data.hospital);
+              const hospId = appointmentResult.data.appointment.hospitalId;
+              if (hospId && String(hospId).trim()) {
+                const hospitalResult = await getHospitalDetails(String(hospId).trim());
+                if (hospitalResult.ok && hospitalResult.data) {
+                  setHospitalDetails(hospitalResult.data.hospital);
+                }
               }
             } else {
               setActiveToken(null);

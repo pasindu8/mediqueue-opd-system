@@ -1,105 +1,79 @@
-# IT23172500 - P A D T Prathiraja
-## Component 3: Triage Priority & Feedback Systems
+# IT23630116 - Vithana O V D P D
+## Component 4: OPD Slot Booking & Live Tracking
 
 ---
 
 ### 1. Component Overview & Workload Description
-- **Student ID:** IT23172500
-- **Student Name:** P A D T Prathiraja
-- **Component Title:** Component 3 – Triage Priority & Feedback Systems
+- **Student ID:** IT23630116
+- **Student Name:** Vithana O V D P D
+- **Component Title:** Component 4 – OPD Slot Booking & Live Tracking
 - **Course:** IT3060 – Human Computer Interaction (HCI)
 - **Project Title:** MediQueue – Appointment Booking and Queue Management for Government Hospital OPDs
 - **Group Number:** WE_170
 - **Group Name:** MediQueue Innovators
 
-Component 3 ensures clinical safety, emergency prioritization, and continuous service quality improvement in government hospitals. High patient volumes often cause critical cases to wait unnoticed in manual queues. Component 3 provides clinical triage categorization, diagnostic lab order monitoring with panic-value doctor alerts, dispensary verification, and an end-to-end patient feedback and service rating system to hold public hospital departments accountable.
+Component 4 addresses the critical problem of overcrowded waiting areas and long waiting times in Sri Lankan government hospital Outpatient Departments (OPDs). By digitizing the appointment scheduling and queue management process, Component 4 enables patients and caregivers to book designated OPD time slots in advance, receive automated digital queue tokens with verifiable QR codes, and track their estimated consultation and queue position in real-time. This significantly minimizes physical congestion, reduces patient fatigue, and improves overall OPD workflow efficiency.
 
 ---
 
-### 2. Functional & Non-Functional Requirements Covered (From Milestone 01 PDF)
+### 2. Functional & Non-Functional Requirements Covered
 
 | Requirement ID | Type | Requirement Description | Traceable Research Evidence |
 | :--- | :--- | :--- | :--- |
-| **FR-14** | Functional | **Priority / Triage Management:** Authorized hospital staff shall be able to manage eligible priority cases according to hospital clinical urgency. | Component 3 – Priority/Triage research & staff questionnaire |
-| **FR-21** | Functional | **Feedback Submission:** The system shall allow patients to submit feedback and quality ratings regarding OPD services and hospital facilities. | Component 3 – Feedback/Review research |
-| **FR-24** | Functional | **Help / Assistance Function:** The system shall provide immediate guidance and an emergency assistance mechanism (e.g. 1990 Suwa Seriya direct dial). | Caregiver Questionnaire – Emergency help & elderly support |
-| **NFR-08** | Non-Functional | **Clinical Accuracy & Synchronization:** Queue states, medication instructions, and diagnostic assay findings must be synchronized accurately. | Staff questionnaire – Manual errors and miscommunication risks |
-| **NFR-02** | Non-Functional | **Accessibility for Elderly/Vulnerable Patients:** High contrast priority badges and simplified feedback scales ensure ease of use. | Persona 01 (Nimal) & Persona 02 (Kumari) |
+| **FR-04** | Functional | **Slot Booking & Scheduling:** Patients shall be able to book available OPD time slots and select doctors or clinics. | Patient survey – Need for scheduled arrival vs walk-in waiting |
+| **FR-05** | Functional | **Token Generation & QR Code:** The system shall generate digital tokens with scannable QR verification for hospital arrival. | Hospital arrival workflow & desk congestion reduction |
+| **FR-15** | Functional | **Live Queue Tracking:** The system shall display real-time queue position and estimated time until consultation. | Patient anxiety reduction & wait-time transparency |
+| **FR-16** | Functional | **Appointment Rescheduling & Cancellation:** Patients shall be able to update or cancel scheduled appointments in advance. | Flexibility for elderly/rural patients traveling long distances |
+| **NFR-03** | Non-Functional | **Real-Time Responsiveness:** Queue status updates and live token transitions must reflect with minimal latency. | Accurate queue progression without patient confusion |
+| **NFR-04** | Non-Functional | **Reliability & Concurrency:** Booking slots and queue numbers must prevent duplicate allocations under peak loads. | Prevents duplicate tokens and double-booking |
 
 ---
 
-### 3. Dedicated FULL CRUD Operations (Component 3)
+### 3. Dedicated FULL CRUD Operation (Component 4)
 
-#### Primary CRUD: Patient OPD Quality Feedback & Service Review (`Feedback` Model)
-
-| Operation | Action Description | Backend API Endpoint | HTTP Method | UI Screen / User Trigger |
-| :--- | :--- | :--- | :--- | :--- |
-| **Create (C)** | Submit star rating (1-5) and detailed feedback for Doctor, Pharmacy, Lab, or Wait Times | `/feedback/create` | `POST` | `src/app/profile/helpSupport.js` -> "Write Review" Modal |
-| **Read (R)** | Fetch and view patient's submitted feedback history and hospital department response status | `/feedback/patient` | `POST` | `src/app/profile/helpSupport.js` -> Review Cards Feed |
-| **Update (U)** | Edit rating stars or update review comments after hospital response or follow-up | `/feedback/update` | `POST` | `src/app/profile/helpSupport.js` -> Pencil Edit Icon Modal |
-| **Delete (D)** | Delete or withdraw a submitted review from the hospital feedback registry | `/feedback/delete` | `POST` | `src/app/profile/helpSupport.js` -> Trash Can Delete Icon |
-
-#### Secondary CRUD: Pharmacy Chronic Refill Requests (`Prescription` Model)
+**Target Entity:** OPD Appointments & Queue Tokens (`Appointment` Model)
 
 | Operation | Action Description | Backend API Endpoint | HTTP Method | UI Screen / User Trigger |
 | :--- | :--- | :--- | :--- | :--- |
-| **Create (C)** | Request chronic prescription refill from hospital dispensary | `/pharmacy/refill/request` | `POST` | `src/app/(tabs)/pharmacy.js` -> "Request Refill" Modal |
-| **Read (R)** | View active prescriptions, dosage schedules, and dispensary counter tokens | `/clinical/patient/prescriptions-and-labs` | `POST` | `src/app/(tabs)/pharmacy.js` -> Pharmacy Tab |
-| **Update (U)** | Update refill instructions, dosage adjustments, or patient caregiver notes | `/pharmacy/refill/update` | `POST` | `src/app/(tabs)/pharmacy.js` -> Edit Refill Modal |
-| **Delete (D)** | Cancel pending refill request | `/pharmacy/refill/cancel` | `POST` | `src/app/(tabs)/pharmacy.js` -> Cancel Refill Button |
+| **Create (C)** | Book a new OPD appointment time slot and generate digital queue token | `/appointment/create` | `POST` | `src/app/appointments/NewToken.js` -> "Book Appointment" / "Confirm Token" |
+| **Read (R)** | View active and upcoming appointments, queue number, and QR verification | `/appointment/details`, `/appointment/user/details` | `POST` | `src/app/(tabs)/appointments.js` & `src/app/(tabs)/queue.js` |
+| **Update (U)** | Reschedule appointment date, clinic slot, or update patient notes | `/appointment/update` | `POST` | `src/app/(tabs)/appointments.js` -> "Reschedule" Modal |
+| **Delete (D)** | Cancel an upcoming OPD appointment slot and release token | `/appointment/delete` | `POST` | `src/app/(tabs)/appointments.js` -> "Cancel Appointment" |
 
 ---
 
 ### 4. Assigned App Screens & UI Components
 
-1. **`src/app/profile/helpSupport.js` (Helpdesk, Emergency Hotlines & Feedback CRUD)**:
-   - 1990 Suwa Seriya direct dial button for life-threatening medical emergencies.
-   - Interactive FAQ accordion for common OPD questions.
-   - Complete live Feedback & Review CRUD (Write, Read list, Edit comments, Delete).
-2. **`src/app/admin/lab.js` (Diagnostic Laboratory Station)**:
-   - Real-time lab test sample processing feed (Dengue NS1 Antigen, Full Blood Count, Lipid Profile).
-   - 4-parameter assay result input with critical panic threshold evaluation.
-   - Audio broadcast alert and stamped report publishing.
-3. **`src/app/admin/pharmacy.js` (Pharmacy Dispensary Station)**:
-   - Counter allocation switcher (Counter 01, Counter 02, Counter 03).
-   - Interactive prescription checklist, item verification, and one-click dispense.
-4. **`src/app/(tabs)/pharmacy.js` (Patient Pharmacy & Lab Monitor)**:
-   - Live prescription progress indicator (Doctor Sent -> Dispensing -> Ready for Pickup).
-   - Downloadable verified diagnostic laboratory findings and MLT stamps.
-5. **`src/app/profile/notifications.js` (Triage Alerts & Clinical Notices)**:
-   - Urgent lab panic notices and pharmacy counter ready notifications.
+1. **`src/app/(tabs)/appointments.js` (Appointments Hub)**:
+   - Lists active, completed, and cancelled appointments with status badges.
+   - Quick access to QR code passes and rescheduling options.
+2. **`src/app/(tabs)/queue.js` (Live Queue Tracker)**:
+   - Dynamic counter showing current serving token number vs patient's token.
+   - Estimated wait time calculation with progress bar.
+3. **`src/app/appointments/NewToken.js` (OPD Booking & Slot Selection)**:
+   - Selection of hospital, clinic type, date, and preferred morning/evening time slot.
+4. **`src/app/appointments/QrScan.js` (Token Verification & Hospital Check-in)**:
+   - Fast hospital gate check-in via QR code scanning.
+5. **`src/app/appointments/doctor.js` (Doctor Directory & Availability)**:
+   - View OPD doctor profiles and clinic room allocations.
 
 ---
 
-### 5. Assigned Backend Files
+### 5. Backend Controllers & Routes
 
-- **Controllers**:
-  - `backend/controllers/feedbackController.js` - Complete CRUD operations for patient service reviews.
-  - `backend/controllers/labController.js` - Lab test queue, parameter evaluation, and report uploads.
-  - `backend/controllers/pharmacyController.js` - Dispensary queues, prescription dispensing, and refill handling.
-  - `backend/controllers/clinicalController.js` - Critical alert broadcasting and clinical data queries.
-- **Routes**:
-  - `backend/routes/feedbackRoutes.js`
-  - `backend/routes/labRoutes.js`
-  - `backend/routes/pharmacyRoutes.js`
-  - `backend/routes/clinicalRoutes.js`
-- **Models**:
-  - `backend/models/Feedback.js` - Mongoose Feedback Schema (`rating`, `comment`, `category`, `status`, `response`).
-  - `backend/models/Prescription.js` - Prescriptions and refill requests schema (`medicines`, `status`, `counter`).
-  - `backend/models/LabOrder.js` - Diagnostic orders schema (`testName`, `results`, `isCriticalFlagged`, `verifiedBy`).
-  - `backend/models/Lab.js` & `backend/models/Pharmacy.js` - Facility station schemas.
+- **Controller:** `backend/controllers/appointmentController.js`
+  - `appointmentCreate`: Validates slot capacity, creates token, and persists record.
+  - `getAppointmentDetails`: Retrieves single booking data by ID.
+  - `getuserAppointmentDetails`: Fetches all appointments for logged-in patient/caregiver.
+  - `getAppointmentsByHospital`: Admin/Doctor queue monitoring endpoint.
+  - `updateAppointmentDetails`: Updates slot/reschedules booking.
+  - `deleteAppointment`: Cancels booking and updates slot availability.
+- **Routes:** `backend/routes/appointmenthospitalRoutes.js`
+- **Testing:** `backend/test/security_and_flow_test.js`
 
 ---
 
-### 6. Assigned Frontend Services & Utilities
+### 6. Component Dependencies & Services
 
-- `src/services/feedbackService.js` - API communication for `submitFeedback`, `fetchPatientFeedback`, `updateFeedback`, `deleteFeedback`.
-- `src/services/adminService.js` - API communication for `fetchPharmacyAdminQueue`, `submitDispensePrescription`, `fetchLabAdminQueue`, `submitVerifyLabReport`.
-
----
-
-### 7. HCI Design & Usability Principles Implemented
-
-- **Visibility of System Status (Nielsen Heuristic #1)**: Distinct color-coded status badges (Green = Verified, Amber = Processing, Red = Critical Panic) immediately inform users of their test results.
-- **Help Users Recognize, Diagnose, and Recover from Errors (Nielsen Heuristic #9)**: Automatic out-of-range parameter validation in laboratory screens highlights critical findings with clear text explanations.
-- **Feedback & User Control (Nielsen Heuristic #3)**: Patients have the freedom to edit or withdraw their reviews at any time, promoting transparency and trust in public healthcare.
+- **Service Module:** `MediQueue/src/services/appointmentsService.js`
+- **API Base Client:** `MediQueue/src/services/api.js`

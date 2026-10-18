@@ -8,6 +8,20 @@ const crypto = require('crypto');
 const { sendSMS } = require('../utils/smsService');
 const { validateNIC } = require('../utils/nicValidator');
 
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const generateToken = (user) => {
+    return jwt.sign(
+        { id: user._id, type: user.type || 'user', NIC: user.NIC, phoneNumber: user.phoneNumber },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+};
+
 //  REGISTER USER
 const registerUser = asyncHandler(async (req, res) => {
     const { name, NIC, phoneNumber } = req.body;
@@ -26,11 +40,10 @@ const registerUser = asyncHandler(async (req, res) => {
     const nicCheck = validateNIC(NIC);
     if (!nicCheck.isValid) {
         return res.status(400).json({
-        success: false,
-        message: nicCheck.message,
+            success: false,
+            message: nicCheck.message,
         });
     }
-
 
     const generateRandomPassword = (length = 12) => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
@@ -47,18 +60,15 @@ const registerUser = asyncHandler(async (req, res) => {
     const existingUsers = await User.find({}, 'password');
 
     while (!isUnique) {
-       
         plainPassword = generateRandomPassword(12);
-
         let matchFound = false;
 
-        
         for (const user of existingUsers) {
             if (user.password) {
                 const isMatch = await bcrypt.compare(plainPassword, user.password);
                 if (isMatch) {
                     matchFound = true;
-                    break; 
+                    break;
                 }
             }
         }
@@ -70,9 +80,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const smsMessage = `Welcome to MediQueue, ${name}!\nRegistration successful.\nTemp Password: ${plainPassword}\nVerification Code: ${verificationCode}`;
+    const smsMessage = `Welcome to MediQueue, ${name}!\nRegistration successful.\nTemp Password: ${plainPassword}\nVerification Code: ${verificationCode}\nCode expires in 5 minutes.`;
     
     await sendSMS(phoneNumber, smsMessage);
+
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes validity
 
     const user = await User.create({
         name,
@@ -81,10 +93,13 @@ const registerUser = asyncHandler(async (req, res) => {
         phoneNumber,
         type: 'user',
         status: 'pending',
-        verificationCode
+        verificationCode,
+        otpExpiresAt,
+        otpAttempts: 0
     });
 
     res.status(201).json({
+        success: true,
         message: 'User created successfully',
         userId: user._id,
     });
@@ -105,17 +120,38 @@ const verification = asyncHandler(async (req, res) => {
         throw new Error('User not found');
     }
 
-    if (users.verificationCode.toString() !== code.toString().trim()) {
+    if (users.otpExpiresAt && new Date() > users.otpExpiresAt) {
+        res.status(400);
+        throw new Error('Verification code has expired. Please request a new code.');
+    }
+
+    if (users.otpAttempts && users.otpAttempts >= 5) {
+        res.status(429);
+        throw new Error('Too many failed attempts. Please request a new verification code.');
+    }
+
+    if (!users.verificationCode || users.verificationCode.toString().trim() !== code.toString().trim()) {
+        users.otpAttempts = (users.otpAttempts || 0) + 1;
+        await users.save();
         res.status(400);
         throw new Error('Invalid verification code');
     }
 
     users.status = 'active';
-    users.verificationCode = 0;
+    users.verificationCode = null;
+    users.otpExpiresAt = null;
+    users.otpAttempts = 0;
     await users.save();
 
-    res.status(201).json({
+    const token = generateToken(users);
+
+    res.status(200).json({
+        success: true,
         message: 'Account verified successfully',
+        token,
+        userId: users._id,
+        name: users.name,
+        type: users.type,
     });
 });
 
@@ -150,9 +186,12 @@ const loginNIC = asyncHandler(async (req, res) => {
     });
   }
 
+  const token = generateToken(user);
+
   res.status(200).json({
     success: true,
     message: 'Login successful',
+    token: token,
     userId: user._id,
     name: user.name,
     NIC: user.NIC,
@@ -177,11 +216,13 @@ const optcodegeni = asyncHandler(async (req, res) => {
   }
 
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const smsMessage = `Hello ${user.name}!\nYour MediQueue login verification code is: ${verificationCode}\nDo not share this code with anyone.`;
+  const smsMessage = `Hello ${user.name}!\nYour MediQueue login verification code is: ${verificationCode}\nCode expires in 5 minutes. Do not share this code.`;
 
   await sendSMS(user.phoneNumber, smsMessage);
 
   user.verificationCode = verificationCode;
+  user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes validity
+  user.otpAttempts = 0;
   await user.save();
 
   res.status(200).json({
@@ -208,19 +249,34 @@ const loginPhone = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
+  if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
+    res.status(400);
+    throw new Error('Verification code has expired. Please request a new code.');
+  }
+
+  if (user.otpAttempts && user.otpAttempts >= 5) {
+    res.status(429);
+    throw new Error('Too many failed attempts. Please request a new code.');
+  }
+
   if (!user.verificationCode || String(user.verificationCode).trim() !== String(code).trim()) {
+    user.otpAttempts = (user.otpAttempts || 0) + 1;
+    await user.save();
     res.status(401);
     throw new Error('Invalid verification code');
   }
 
- 
   user.verificationCode = null;
+  user.otpExpiresAt = null;
+  user.otpAttempts = 0;
   await user.save();
 
-  
+  const token = generateToken(user);
+
   res.status(200).json({
     success: true,
     message: 'Login successful',
+    token: token,
     userId: user._id,
     name: user.name,
     NIC: user.NIC,

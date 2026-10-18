@@ -27,9 +27,17 @@ const adminSchema = new mongoose.Schema({
     verificationCode: {
         type: String
     },
+    otpExpiresAt: {
+        type: Date
+    },
+    otpAttempts: {
+        type: Number,
+        default: 0
+    },
     phoneNumber: {
         type: String,
         unique: true,
+        sparse: true,
     },
     role: {
         type: String,

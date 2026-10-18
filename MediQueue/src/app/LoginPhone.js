@@ -117,6 +117,7 @@ export default function LoginPhone() {
       const result = await loginPhone(phone.trim(), fullOtp);
 
       if (result.ok) {
+        if (result.data?.token) await AsyncStorage.setItem('token', String(result.data.token));
         if (result.data?.userId) await AsyncStorage.setItem('userId', String(result.data.userId));
         if (result.data?.name) await AsyncStorage.setItem('name', String(result.data.name));
         if (result.data?.NIC) await AsyncStorage.setItem('NIC', String(result.data.NIC));

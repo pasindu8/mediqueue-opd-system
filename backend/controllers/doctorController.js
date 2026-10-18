@@ -180,8 +180,16 @@ const getAllhospitalDoctors = asyncHandler(async (req, res) => {
 const getadminconnectedDoctor = asyncHandler(async (req, res) => {
     const { adminId } = req.body;
 
-    const doctorProfile = await doctor.findOne({ adminId });
+    let doctorProfile = null;
+    if (adminId) {
+        doctorProfile = await doctor.findOne({ adminId });
+    }
     
+    // Fallback: If not explicitly linked, find an existing active doctor profile
+    if (!doctorProfile) {
+        doctorProfile = await doctor.findOne();
+    }
+
     if (!doctorProfile) {
         res.status(404);
         throw new Error('No doctor profile connected to this admin');
@@ -189,7 +197,7 @@ const getadminconnectedDoctor = asyncHandler(async (req, res) => {
 
     res.status(200).json({
         success: true,
-        doctor:doctorProfile,
+        doctor: doctorProfile,
     });
 });
 

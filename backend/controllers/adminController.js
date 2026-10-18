@@ -9,10 +9,9 @@ const { sendSMS } = require('../utils/smsService');
 const registerAdmin = asyncHandler(async (req, res) => {
   const { name, StaffID, email, phoneNumber, password, role } = req.body;
 
-  
-  if (!name || !StaffID || !email || !phoneNumber || !role) {
+  if (!name || !StaffID || !email || !phoneNumber || !password || !role) {
     res.status(400);
-    throw new Error('Name, StaffID, Email, and Phone Number are required');
+    throw new Error('Name, StaffID, Email, Phone Number, Password, and Role are required');
   }
 
   const adminExists = await Admin.findOne({
@@ -29,9 +28,8 @@ const registerAdmin = asyncHandler(async (req, res) => {
   // 6-digit Verification Code
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Dispatch SMS verification notification
   const smsMessage = `Welcome to MediQueue Admin Portal, ${name}!\nStaff ID: ${StaffID}\n Password: ${password}\nVerification Code: ${verificationCode}`;
-  //await sendSMS(phoneNumber, smsMessage);
+  await sendSMS(phoneNumber, smsMessage);
 
   // Save new document according to adminSchema
   const newAdmin = await Admin.create({
@@ -42,6 +40,8 @@ const registerAdmin = asyncHandler(async (req, res) => {
     phoneNumber,
     status: 'pending',
     verificationCode,
+    otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    otpAttempts: 0,
     role,
   });
 
@@ -118,13 +118,27 @@ const verification = asyncHandler(async (req, res) => {
     throw new Error('Admin not found');
   }
 
+  if (admin.otpExpiresAt && new Date() > admin.otpExpiresAt) {
+    res.status(400);
+    throw new Error('Verification code has expired. Please request a new code.');
+  }
+
+  if (admin.otpAttempts >= 5) {
+    res.status(429);
+    throw new Error('Too many failed attempts. Please request a new verification code.');
+  }
+
   if (!admin.verificationCode || admin.verificationCode.toString().trim() !== code.toString().trim()) {
+    admin.otpAttempts += 1;
+    await admin.save();
     res.status(400);
     throw new Error('Invalid verification code');
   }
 
   admin.status = 'active';
   admin.verificationCode = null;
+  admin.otpExpiresAt = null;
+  admin.otpAttempts = 0;
   await admin.save();
 
   res.status(200).json({
@@ -169,9 +183,26 @@ const loginAdmin = asyncHandler(async (req, res) => {
     });
   }
 
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is not configured');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const generateAdminToken = (admin) => {
+  return jwt.sign(
+    { id: admin._id, type: 'admin', StaffID: admin.StaffID, role: admin.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+};
+
+  const token = generateAdminToken(admin);
+
   res.status(200).json({
     success: true,
     message: 'Admin login successful',
+    token: token,
     adminId: admin._id,
     name: admin.name,
     StaffID: admin.StaffID,
@@ -202,11 +233,13 @@ const optcodegeni = asyncHandler(async (req, res) => {
   }
 
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const smsMessage = `Hello ${admin.name}!\nYour MediQueue Admin login verification code is: ${verificationCode}`;
+  const smsMessage = `Hello ${admin.name}!\nYour MediQueue Admin login verification code is: ${verificationCode}\nCode expires in 5 minutes.`;
 
   await sendSMS(admin.phoneNumber, smsMessage);
 
   admin.verificationCode = verificationCode;
+  admin.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  admin.otpAttempts = 0;
   await admin.save();
 
   res.status(200).json({
@@ -234,42 +267,93 @@ const loginPhone = asyncHandler(async (req, res) => {
     throw new Error('Admin not found');
   }
 
+  if (admin.otpExpiresAt && new Date() > admin.otpExpiresAt) {
+    res.status(400);
+    throw new Error('Verification code has expired. Please request a new code.');
+  }
+
+  if (admin.otpAttempts && admin.otpAttempts >= 5) {
+    res.status(429);
+    throw new Error('Too many failed attempts. Please request a new code.');
+  }
+
   if (!admin.verificationCode || String(admin.verificationCode).trim() !== String(code).trim()) {
+    admin.otpAttempts = (admin.otpAttempts || 0) + 1;
+    await admin.save();
     res.status(401);
     throw new Error('Invalid verification code');
   }
 
   admin.verificationCode = null;
+  admin.otpExpiresAt = null;
+  admin.otpAttempts = 0;
   await admin.save();
+
+  const token = generateAdminToken(admin);
 
   res.status(200).json({
     success: true,
     message: 'Login successful',
+    token: token,
     adminId: admin._id,
     name: admin.name,
     StaffID: admin.StaffID,
     email: admin.email,
     phoneNumber: admin.phoneNumber,
     status: admin.status,
+    role: admin.role,
   });
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const { adminId, newPassword } = req.body;
+  const { adminId, currentPassword, newPassword, code } = req.body;
 
-  if (!adminId || !newPassword) {
+  if (!newPassword) {
     res.status(400);
-    throw new Error('Admin ID and new password are required');
+    throw new Error('New password is required');
   }
 
-  const admin = await Admin.findById(adminId);
+  const targetAdminId = req.user.id;
+  if (adminId && String(adminId) !== String(targetAdminId)) {
+    res.status(403);
+    throw new Error('You can only reset your own password');
+  }
+
+  const admin = await Admin.findById(targetAdminId);
   if (!admin) {
     res.status(404);
     throw new Error('Admin not found');
   }
 
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  // Security check: Must supply either current password or valid OTP code
+  if (currentPassword) {
+    const isMatch = await bcrypt.compare(currentPassword, admin.password);
+    if (!isMatch) {
+      res.status(401);
+      throw new Error('Current password is incorrect');
+    }
+  } else if (code) {
+    if (!admin.verificationCode || String(admin.verificationCode).trim() !== String(code).trim()) {
+      res.status(401);
+      throw new Error('Invalid verification code for password reset');
+    }
+    if (admin.otpExpiresAt && new Date() > admin.otpExpiresAt) {
+      res.status(400);
+      throw new Error('Verification code has expired. Please request a new code.');
+    }
+    admin.verificationCode = null;
+    admin.otpExpiresAt = null;
+  } else {
+    res.status(400);
+    throw new Error('Current password or verification code is required to reset password');
+  }
 
+  if (newPassword.length < 6) {
+    res.status(400);
+    throw new Error('New password must be at least 6 characters long');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
   admin.password = hashedPassword;
   await admin.save();
 

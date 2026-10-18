@@ -80,6 +80,9 @@ export default function VerifyOtpScreen() {
       const result = await verifyUser(fullOtp, savedUserId);
 
       if (result.ok) {
+        if (result.data?.token) {
+          await AsyncStorage.setItem('token', String(result.data.token));
+        }
         triggerSuccess(result.data?.message || 'Verification successful!');
         setTimeout(() => {
           router.replace('/LoginNIC');

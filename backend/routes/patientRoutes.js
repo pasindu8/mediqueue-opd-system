@@ -3,12 +3,11 @@ const router = express.Router();
 
 const { patientCreate, getPatientDetails, updatePatientProfile, deletePatientProfile, } = require('../controllers/patientController');
 
-const protect = require('../middleware/authMiddleware');
+const { protect, requireRole } = require('../middleware/authMiddleware');
 
-
-router.post('/create', patientCreate);
-router.post('/details', getPatientDetails);
-router.post('/update', updatePatientProfile);
-router.post('/delete', deletePatientProfile);
+router.post('/create', protect, requireRole('user'), patientCreate);
+router.post('/details', protect, requireRole('user'), getPatientDetails);
+router.post('/update', protect, requireRole('user'), updatePatientProfile);
+router.post('/delete', protect, requireRole('user'), deletePatientProfile);
 
 module.exports = router;

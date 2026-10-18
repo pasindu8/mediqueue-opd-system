@@ -19,18 +19,15 @@ const errorHandler = require('./middleware/errorMiddleware');
 
 const app = express();
 
-// 1. Connect Database
-connectDB();
-
-// 2. Standard Middlewares
+// 1. Standard Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. Static Folder for Uploads
+// 2. Static Folder for Uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 4. API Routes
+// 3. API Routes
 app.use('/auth', authRoutes);
 app.use('/patient', patientRoutes);
 app.use('/hospital', hospitalRoutes);
@@ -42,18 +39,29 @@ app.use('/pharmacy', pharmacyRoutes);
 app.use('/lab', labRoutes);
 app.use('/clinical', clinicalRoutes);
 app.use('/feedback', feedbackRoutes);
-// 5. 404 Route Not Found Middleware (Optional)
+
+// 4. 404 Route Not Found Middleware (Optional)
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`);
     res.status(404);
     next(error);
 });
 
-// 6. Custom Error Handler Middleware
+// 5. Custom Error Handler Middleware
 app.use(errorHandler);
 
-// 7. Start Server
+// 6. Connect Database & Start Server Gracefully
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+const startServer = async () => {
+    try {
+        await connectDB();
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server due to DB connection error:', error);
+        process.exit(1);
+    }
+};
+
+startServer();

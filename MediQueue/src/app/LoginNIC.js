@@ -89,6 +89,7 @@ export default function LoginNIC() {
       const result = await loginNIC(cleanNic, password.trim());
 
       if (result.ok) {
+        if (result.data?.token) await AsyncStorage.setItem('token', String(result.data.token));
         if (result.data?.userId) await AsyncStorage.setItem('userId', String(result.data.userId));
         if (result.data?.name) await AsyncStorage.setItem('name', String(result.data.name));
         if (result.data?.NIC) await AsyncStorage.setItem('NIC', String(result.data.NIC));

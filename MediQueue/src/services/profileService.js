@@ -1,8 +1,8 @@
-import { BASE_URL } from './api';
+import { apiFetch, BASE_URL } from './api';
 
 export const getPatientDetails = async (userId) => {
   try {
-    const response = await fetch(`${BASE_URL}/patient/details`, {
+    const response = await apiFetch(`${BASE_URL}/patient/details`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -22,21 +22,21 @@ export const getPatientDetails = async (userId) => {
 
 export const EditPatientDetails = async (userId, fullName, dateOfBirth, gender, age, address, emergencyContact, bloodGroup, knownAllergies, medicalHistory) => {
   try {
-    const response = await fetch(`${BASE_URL}/patient/update`, {
+    const response = await apiFetch(`${BASE_URL}/patient/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId, 
-        fullName, 
-        dateOfBirth, 
-        gender, 
-        age, 
-        address, 
-        emergencyContact, 
-        bloodGroup, 
-        knownAllergies, 
+        userId,
+        fullName,
+        dateOfBirth,
+        gender,
+        age,
+        address,
+        emergencyContact,
+        bloodGroup,
+        knownAllergies,
         medicalHistory
       }),
     });
@@ -52,21 +52,21 @@ export const EditPatientDetails = async (userId, fullName, dateOfBirth, gender, 
 
 export const addPatientDetails = async (userId, fullName, dateOfBirth, gender, age, address, emergencyContact, bloodGroup, knownAllergies, medicalHistory) => {
   try {
-    const response = await fetch(`${BASE_URL}/patient/create`, {
+    const response = await apiFetch(`${BASE_URL}/patient/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId, 
-        fullName, 
-        dateOfBirth, 
-        gender, 
-        age, 
-        address, 
-        emergencyContact, 
-        bloodGroup, 
-        knownAllergies, 
+        userId,
+        fullName,
+        dateOfBirth,
+        gender,
+        age,
+        address,
+        emergencyContact,
+        bloodGroup,
+        knownAllergies,
         medicalHistory
       }),
     });
@@ -81,7 +81,7 @@ export const addPatientDetails = async (userId, fullName, dateOfBirth, gender, a
 
 export const deletePatientProfile = async (userId) => {
   try {
-    const response = await fetch(`${BASE_URL}/patient/delete`, {
+    const response = await apiFetch(`${BASE_URL}/patient/delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -97,4 +97,4 @@ export const deletePatientProfile = async (userId) => {
     console.error('API Error in deletePatientProfile:', error);
     throw error;
   }
-};
+};

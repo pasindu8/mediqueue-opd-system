@@ -1,8 +1,8 @@
-import { BASE_URL } from './api';
+import { apiFetch, BASE_URL } from './api';
 
 export const getPatientDetails = async (userId) => {
   try {
-    const response = await fetch(`${BASE_URL}/patient/details`, {
+    const response = await apiFetch(`${BASE_URL}/patient/details`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ export const createAppointment = async (
   clinicDetails = {}
 ) => {
   try {
-    const response = await fetch(`${BASE_URL}/appointment/create`, {
+    const response = await apiFetch(`${BASE_URL}/appointment/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export const createAppointment = async (
 
 export const getPatientAppointmentDetails = async (userId) => {
   try {
-    const response = await fetch(`${BASE_URL}/appointment/user/details`, {
+    const response = await apiFetch(`${BASE_URL}/appointment/user/details`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export const getPatientAppointmentDetails = async (userId) => {
 
 export const getPatientPrescriptionsAndLabs = async (userId, patientId) => {
   try {
-    const response = await fetch(`${BASE_URL}/clinical/patient/prescriptions-and-labs`, {
+    const response = await apiFetch(`${BASE_URL}/clinical/patient/prescriptions-and-labs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ export const getPatientPrescriptionsAndLabs = async (userId, patientId) => {
 
 export const updateAppointment = async (appointmentId, appointmentDate, appointmentTime) => {
   try {
-    const response = await fetch(`${BASE_URL}/appointment/update`, {
+    const response = await apiFetch(`${BASE_URL}/appointment/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export const updateAppointment = async (appointmentId, appointmentDate, appointm
 
 export const deleteAppointment = async (appointmentId) => {
   try {
-    const response = await fetch(`${BASE_URL}/appointment/delete`, {
+    const response = await apiFetch(`${BASE_URL}/appointment/delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export const deleteAppointment = async (appointmentId) => {
 
 export const joinLiveQueue = async (userId, patientId, hospitalId, clinicName, symptoms) => {
   try {
-    const response = await fetch(`${BASE_URL}/clinical/patient/queue/join`, {
+    const response = await apiFetch(`${BASE_URL}/clinical/patient/queue/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ export const joinLiveQueue = async (userId, patientId, hospitalId, clinicName, s
 
 export const updateQueueSymptoms = async (appointmentId, tokenNumber, symptoms) => {
   try {
-    const response = await fetch(`${BASE_URL}/clinical/patient/queue/update-symptoms`, {
+    const response = await apiFetch(`${BASE_URL}/clinical/patient/queue/update-symptoms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ export const updateQueueSymptoms = async (appointmentId, tokenNumber, symptoms) 
 
 export const cancelQueueToken = async (appointmentId, tokenNumber) => {
   try {
-    const response = await fetch(`${BASE_URL}/clinical/patient/queue/cancel`, {
+    const response = await apiFetch(`${BASE_URL}/clinical/patient/queue/cancel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ export const cancelQueueToken = async (appointmentId, tokenNumber) => {
 
 export const snoozeQueueToken = async (appointmentId, tokenNumber, snoozePositions = 2) => {
   try {
-    const response = await fetch(`${BASE_URL}/clinical/patient/queue/snooze`, {
+    const response = await apiFetch(`${BASE_URL}/clinical/patient/queue/snooze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -224,7 +224,7 @@ export const snoozeQueueToken = async (appointmentId, tokenNumber, snoozePositio
 
 export const createRefillRequest = async (userId, patientId, medicineName, dosage, instructions, notes, hospitalId) => {
   try {
-    const response = await fetch(`${BASE_URL}/pharmacy/refill/request`, {
+    const response = await apiFetch(`${BASE_URL}/pharmacy/refill/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ export const createRefillRequest = async (userId, patientId, medicineName, dosag
 
 export const updateRefillRequest = async (prescriptionId, instructions, notes) => {
   try {
-    const response = await fetch(`${BASE_URL}/pharmacy/refill/update`, {
+    const response = await apiFetch(`${BASE_URL}/pharmacy/refill/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -272,7 +272,7 @@ export const updateRefillRequest = async (prescriptionId, instructions, notes) =
 
 export const cancelRefillRequest = async (prescriptionId) => {
   try {
-    const response = await fetch(`${BASE_URL}/pharmacy/refill/cancel`, {
+    const response = await apiFetch(`${BASE_URL}/pharmacy/refill/cancel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -291,4 +291,4 @@ export const cancelRefillRequest = async (prescriptionId) => {
 };
 
 
-
+

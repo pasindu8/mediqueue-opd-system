@@ -50,7 +50,7 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       setLoading(true);
-      await AsyncStorage.clear();
+      await AsyncStorage.multiRemove(['userId', 'token', 'name', 'NIC', 'phoneNumber', 'type']);
       router.replace('/LoginNIC');
     } catch (error) {
       console.error('Logout error:', error);

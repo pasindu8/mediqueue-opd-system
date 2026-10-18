@@ -10,11 +10,13 @@ const {
   getAppointmentsByHospital,
 } = require('../controllers/appointmentController');
 
-router.post('/create', appointmentCreate);
-router.post('/details', getAppointmentDetails);
-router.post('/update', updateAppointmentDetails);
-router.post('/delete', deleteAppointment);
-router.post('/user/details', getuserAppointmentDetails);
+const { optionalAuth } = require('../middleware/authMiddleware');
+
+router.post('/create', optionalAuth, appointmentCreate);
+router.post('/details', optionalAuth, getAppointmentDetails);
+router.post('/update', optionalAuth, updateAppointmentDetails);
+router.post('/delete', optionalAuth, deleteAppointment);
+router.post('/user/details', optionalAuth, getuserAppointmentDetails);
 router.post('/getByHospital', getAppointmentsByHospital);
 
 module.exports = router;

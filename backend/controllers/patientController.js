@@ -1,91 +1,72 @@
 require('dotenv').config();
 const patient = require('../models/PatientDetails');
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const asyncHandler = require('../middleware/asyncHandler');
-const axios = require('axios');
 const crypto = require('crypto');
 
 
 
 const patientCreate = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const { patientId, fullName, dateOfBirth, gender, age, address, emergencyContact, bloodGroup, knownAllergies, medicalHistory } = req.body;
 
-    const { userId, patientId, fullName, dateOfBirth, gender, age, address, emergencyContact, bloodGroup, knownAllergies, medicalHistory } = req.body;
-
-    if (!fullName || !dateOfBirth || !gender || !age || !address || !emergencyContact || !bloodGroup || !knownAllergies || !medicalHistory) {
+    if (!fullName || !dateOfBirth || !gender || age === undefined || !address || !emergencyContact || !bloodGroup) {
         res.status(400);
-        throw new Error('All fields are required');
+        throw new Error('Full name, date of birth, gender, age, address, emergency contact, and blood group are required');
     }
 
-    const patientExists = await patient.findOne({ patientId });
-    if (patientExists) {
-        res.status(400);
-        throw new Error('Patient with this ID already exists');
-    }
-
-    const useridCheck = await User.findOne({ _id: userId });
-
+    const useridCheck = await User.findById(userId);
     if (!useridCheck) {
-        res.status(400);
-        throw new Error('User with this ID does not exist');
+        res.status(404);
+        throw new Error('User account not found');
     }
-    console.log('User ID:', userId);
+
+    // Check if patient profile already exists for this user
+    const existingProfile = await patient.findOne({ userId });
+    if (existingProfile) {
+        return res.status(200).json({
+            success: true,
+            message: 'Patient profile already exists',
+            patientId: existingProfile._id,
+            data: existingProfile
+        });
+    }
+
+    // Auto-generate unique patientId if not provided by client
+    const resolvedPatientId = patientId && String(patientId).trim() !== ''
+        ? String(patientId).trim()
+        : `PAT-${crypto.randomUUID()}`;
+
     const pati = await patient.create({
         userId,
-        patientId,
-        fullName,
+        patientId: resolvedPatientId,
+        fullName: String(fullName).trim(),
         dateOfBirth,
         gender,
         age,
         address,
         emergencyContact,
-        bloodGroup,
-        knownAllergies,
-        medicalHistory
+        bloodGroup: String(bloodGroup).trim(),
+        knownAllergies: Array.isArray(knownAllergies) ? knownAllergies : (knownAllergies ? [knownAllergies] : []),
+        medicalHistory: Array.isArray(medicalHistory) ? medicalHistory : (medicalHistory ? [medicalHistory] : [])
     });
 
     res.status(201).json({
+        success: true,
         message: 'Patient profile created successfully',
-        patientId: patient._id,
+        patientId: pati._id,
+        data: pati
     });
 });
 
 const getPatientDetails = asyncHandler(async (req, res) => {
-  const { userId } = req.body;
-
-  if (!userId) {
-    res.status(400);
-    throw new Error('login required');
-  }
+  const userId = req.user.id;
 
   let patientData = await patient.findOne({ userId: userId });
 
   if (!patientData) {
-    // Check if user exists in User collection
-    let userData = null;
-    try {
-      userData = await User.findOne({ _id: userId });
-    } catch (e) {
-      // safe
-    }
-
-    if (!userData) {
-      res.status(404);
-      throw new Error('Patient not found');
-    }
-
-    return res.status(200).json({
-      success: true,
-      _id: userData._id,
-      patientId: `MQ-${userData.phoneNumber || '001'}`,
-      fullName: userData.name || 'Patient',
-      age: 32,
-      gender: 'Male',
-      bloodGroup: 'B+',
-      knownAllergies: [],
-      medicalHistory: []
-    });
+    res.status(404);
+    throw new Error('Patient not found');
   }
 
   res.status(200).json({
@@ -107,7 +88,8 @@ const getPatientDetails = asyncHandler(async (req, res) => {
 
 
 const updatePatientProfile = asyncHandler(async (req, res) => {
-    const { userId, fullName, dateOfBirth, gender, age, address, emergencyContact, bloodGroup, knownAllergies, medicalHistory } = req.body;
+    const userId = req.user.id;
+    const { fullName, dateOfBirth, gender, age, address, emergencyContact, bloodGroup, knownAllergies, medicalHistory } = req.body;
 
     const patientProfile = await patient.findOne({ userId });
 
@@ -120,12 +102,12 @@ const updatePatientProfile = asyncHandler(async (req, res) => {
     patientProfile.fullName = fullName || patientProfile.fullName;
     patientProfile.dateOfBirth = dateOfBirth || patientProfile.dateOfBirth;
     patientProfile.gender = gender || patientProfile.gender;
-    patientProfile.age = age || patientProfile.age;
+    patientProfile.age = age === undefined ? patientProfile.age : age;
     patientProfile.address = address || patientProfile.address;
     patientProfile.bloodGroup = bloodGroup || patientProfile.bloodGroup;
     patientProfile.emergencyContact = emergencyContact || patientProfile.emergencyContact;
-    patientProfile.knownAllergies = knownAllergies || patientProfile.knownAllergies;
-    patientProfile.medicalHistory = medicalHistory || patientProfile.medicalHistory;
+    patientProfile.knownAllergies = Array.isArray(knownAllergies) ? knownAllergies : patientProfile.knownAllergies;
+    patientProfile.medicalHistory = Array.isArray(medicalHistory) ? medicalHistory : patientProfile.medicalHistory;
 
     const updatedPatient = await patientProfile.save();
 
@@ -138,7 +120,7 @@ const updatePatientProfile = asyncHandler(async (req, res) => {
 
 
 const deletePatientProfile = asyncHandler(async (req, res) => {
-    const { userId } = req.body;
+    const userId = req.user.id;
 
     const patientProfile = await patient.findOne({ userId });
 
